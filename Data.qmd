@@ -1,0 +1,69 @@
+---
+title: "Data"
+author: 
+date: 
+format: 
+  pdf:
+    include-in-header: 
+       text: |
+         \usepackage{fvextra}
+         \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+include-before-body:
+  text: |
+    \RecustomVerbatimEnvironment{verbatim}{Verbatim}{
+      showspaces = false,
+      showtabs = false,
+      breaksymbolleft={},
+      breaklines
+    }
+output:
+  echo: false
+  eval: false
+---
+This document is meant to be the hub for acquiring the data for the DAP II final project.
+
+### Census API pull
+This step uses the .acs5.get() function to pull the relevant tables from the US Census API/
+
+```{python}
+import os
+import pandas as pd
+from census import Census
+from us import states
+
+# Initialize the Census API with your API key
+census_key = "28685c677403ed1719764eb8ba7a6087d00544fb"
+c = Census(census_key)
+
+# Define the output directory and file name
+directory = "/Users/griffinsharps/Documents/Repos/DAPII_final"
+file_name = os.path.join(directory, "B2575_raw.csv")
+
+
+# Check if the CSV file already exists
+if os.path.exists(file_name):
+    print("Data file already exists. Skipping API call.")
+else:
+    variables = [f"B25075_{str(i).zfill(3)}E" for i in range(1, 26)]
+    county_code = "031"  # Cook County
+    state_code = "17"  # Illinois
+    years = range(2010, 2023)
+    all_data = []
+
+    for year in years:
+        data = c.acs5.state_county_tract(
+            fields=["NAME"] + variables,
+            state_fips=state_code,
+            county_fips=county_code,
+            tract="*",
+            year=year
+        )
+        
+        df = pd.DataFrame(data)
+        df['year'] = year
+        all_data.append(df)
+
+    # Combine all data into a single DataFrame
+    combined_data = pd.concat(all_data, ignore_index=True)
+    combined_data.to_csv(file_name, index=False)
+```
