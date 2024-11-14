@@ -22,11 +22,6 @@ output:
 ---
 This document is meant to be the hub for acquiring the data for the DAP II final project.
 
-### Set Directory
-Change as needed while collaborating and define all file paths as ditectory + '_'
-```{python}
-directory = r"C:\Users\EM\Documents\GitHub\DAPII_final"
-```
 
 ### Census API pull
 This step uses the .acs5.get() function to pull the relevant tables from the US Census API/
@@ -75,10 +70,6 @@ else:
     combined_data.to_csv(file_name, index=False)
 ```
 
-
-```{python}
-```
-
 ### City of Chicago Vacant Lot API Pull
  
 This section grabs data from [this](https://data.cityofchicago.org/resource/kc9i-wq85.csv) CoC source.
@@ -99,10 +90,20 @@ vacant_df = pd.DataFrame.from_records(results)
 vacant_df.to_csv('vacant.csv') 
 ```
 
+
+### Checkpoint; data has been acquired
+## Set Directory
+
+Change as needed while collaborating and define all file paths as ditectory + '_'
+```{python}
+directory = r"C:\Users\EM\Documents\GitHub\DAPII_final"
+```
+
+
 ```{python}
 census_data = pd.read_csv(directory + "\B2575_raw.csv")
 
-vacancy_data = pd.read_csv(directory + "\vacant.csv")
+vacancy_data = pd.read_csv(directory + "\\vacant.csv")
 
 ```
 
@@ -146,13 +147,13 @@ from shapely.geometry import Point
 #create a geometry column from the coordinates
 vacancy_data['geometry'] = vacancy_data.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
 
-#transform vacancy location column into readable geographi data
+#transform vacancy location column into readable geographic data
 vacancy_gdf = gpd.GeoDataFrame(vacancy_data, geometry='geometry')
 
 #set coordinate ref system
 vacancy_gdf.set_crs(epsg=4326, inplace=True) 
 
-#plot tracts and points
+#plot tracts and points; used gen AI for simple plot
 
 fig, ax = plt.subplots(figsize=(10, 10))
 
