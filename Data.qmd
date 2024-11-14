@@ -32,6 +32,7 @@ from census import Census
 from us import states
 
 # Initialize the Census API with your API key
+#Ella's Census Key: 4baba8df9d607f462b00b40dea2f2e359b2b8fe6
 census_key = "28685c677403ed1719764eb8ba7a6087d00544fb"
 c = Census(census_key)
 
@@ -66,4 +67,24 @@ else:
     # Combine all data into a single DataFrame
     combined_data = pd.concat(all_data, ignore_index=True)
     combined_data.to_csv(file_name, index=False)
+```
+
+
+```{python}
+#Vacant Lot Data
+
+#API endpoint: https://data.cityofchicago.org/resource/kc9i-wq85.csv
+
+# make sure to install this package before running:
+# pip install sodapy
+from sodapy import Socrata
+
+client = Socrata("data.cityofchicago.org", None)
+
+# Hard coded total rows (5004), as results are limited at 1000 per query.
+# Returned as JSON from API / converted to Python list of dictionaries by sodapy.
+results = client.get("kc9i-wq85", limit=5004)
+
+# Convert to pandas DataFrame
+vacant_df = pd.DataFrame.from_records(results)
 ```
