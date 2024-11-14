@@ -37,7 +37,7 @@ census_key = "28685c677403ed1719764eb8ba7a6087d00544fb"
 c = Census(census_key)
 
 # Define the output directory and file name
-directory = "/Users/griffinsharps/Documents/Repos/DAPII_final"
+directory = r"C:\Users\laine\OneDrive\Documents\GitHub\DAPII_final"
 file_name = os.path.join(directory, "B2575_raw.csv")
 
 
@@ -71,6 +71,10 @@ else:
 
 
 ```{python}
+```
+
+
+```{python}
 #Vacant Lot Data
 
 #API endpoint: https://data.cityofchicago.org/resource/kc9i-wq85.csv
@@ -87,4 +91,37 @@ results = client.get("kc9i-wq85", limit=5004)
 
 # Convert to pandas DataFrame
 vacant_df = pd.DataFrame.from_records(results)
+
+#LL- should we export vacant_df as a csv
+# so that we don't have to run the process again? 
+```
+
+```{python}
+census_data=pd.read_csv(r"C:\Users\laine\OneDrive\Documents\GitHub\DAPII_final\B2575_raw.csv")
+```
+
+
+```{python}
+geo_data=gpd.read_file(r"C:\Users\laine\OneDrive\Documents\GitHub\DAPII_final\geo_export_babed850-df6f-42f1-a951-f174092d5ba8.shp")
+
+```
+
+```{python}
+geo_data.head()
+```
+
+```{python}
+census_data.head()
+```
+
+```{python}
+#allign names for census_data and geo_data
+census_data['NAME']=census_data['NAME'].str.replace(", Cook County, Illinois", "")
+
+```
+
+```{python}
+merged_census_and_geo=census_data.merge(geo_data, left_on='NAME', right_on='namelsad10', how='left')
+merged_census_and_geo=gpd.GeoDataFrame(merged_census_and_geo, geometry='geometry')
+merged_census_and_geo.head()
 ```
