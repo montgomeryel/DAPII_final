@@ -22,6 +22,12 @@ output:
 ---
 This document is meant to be the hub for acquiring the data for the DAP II final project.
 
+### Set Directory
+Change as needed while collaborating and define all file paths as ditectory + '_'
+```{python}
+directory = r"C:\Users\EM\Documents\GitHub\DAPII_final"
+```
+
 ### Census API pull
 This step uses the .acs5.get() function to pull the relevant tables from the US Census API/
 
@@ -73,12 +79,11 @@ else:
 ```{python}
 ```
 
+### City of Chicago Vacant Lot API Pull
+ 
+This section grabs data from [this](https://data.cityofchicago.org/resource/kc9i-wq85.csv) CoC source.
 
 ```{python}
-#Vacant Lot Data
-
-#API endpoint: https://data.cityofchicago.org/resource/kc9i-wq85.csv
-
 # make sure to install this package before running:
 # pip install sodapy
 from sodapy import Socrata
@@ -91,18 +96,21 @@ results = client.get("kc9i-wq85", limit=5004)
 
 # Convert to pandas DataFrame
 vacant_df = pd.DataFrame.from_records(results)
-vacant_df.to_csv('vacant.csv')
-#LL- should we export vacant_df as a csv
-# so that we don't have to run the process again? 
+vacant_df.to_csv('vacant.csv') 
 ```
 
 ```{python}
-census_data=pd.read_csv(r"C:\Users\laine\OneDrive\Documents\GitHub\DAPII_final\B2575_raw.csv")
+census_data = pd.read_csv(directory + "\B2575_raw.csv")
+
+vacancy_data = pd.read_csv(directory + "\vacant.csv")
+
 ```
 
 
 ```{python}
-geo_data=gpd.read_file(r"C:\Users\laine\OneDrive\Documents\GitHub\DAPII_final\geo_export_babed850-df6f-42f1-a951-f174092d5ba8.shp")
+import geopandas as gpd
+
+geo_data=gpd.read_file(directory + "\geo_export_babed850-df6f-42f1-a951-f174092d5ba8.shp")
 
 ```
 
@@ -124,4 +132,36 @@ census_data['NAME']=census_data['NAME'].str.replace(", Cook County, Illinois", "
 merged_census_and_geo=census_data.merge(geo_data, left_on='NAME', right_on='namelsad10', how='left')
 merged_census_and_geo=gpd.GeoDataFrame(merged_census_and_geo, geometry='geometry')
 merged_census_and_geo.head()
+```
+
+### Plotting Data
+Here we will test our geo data
+
+```{python}
+import altair as alt
+import matplotlib.pyplot as plt
+from shapely.geometry import Point
+
+
+#create a geometry column from the coordinates
+vacancy_data['geometry'] = vacancy_data.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
+
+#transform vacancy location column into readable geographi data
+vacancy_gdf = gpd.GeoDataFrame(vacancy_data, geometry='geometry')
+
+#set coordinate ref system
+vacancy_gdf.set_crs(epsg=4326, inplace=True) 
+
+#plot tracts and points
+
+fig, ax = plt.subplots(figsize=(10, 10))
+
+# Plot the city tracts
+geo_data.plot(ax=ax, color='white', edgecolor='black')
+
+# Plot the points
+vacancy_gdf.plot(ax=ax, color='red', markersize=5)
+
+plt.show()
+
 ```
