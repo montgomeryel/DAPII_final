@@ -91,7 +91,7 @@ results = client.get("kc9i-wq85", limit=5004)
 
 # Convert to pandas DataFrame
 vacant_df = pd.DataFrame.from_records(results)
-
+vacant_df.to_csv('vacant.csv')
 #LL- should we export vacant_df as a csv
 # so that we don't have to run the process again? 
 ```
