@@ -29,6 +29,7 @@ This step uses the .acs5.get() function to pull the relevant tables from the US 
 ```{python}
 import os
 import pandas as pd
+import requests
 from census import Census
 from us import states
 
@@ -39,7 +40,7 @@ c = Census(census_key)
 
 # Define the output directory and file name
 directory = r"C:\Users\laine\OneDrive\Documents\GitHub\DAPII_final"
-file_name = os.path.join(directory, "B2575_raw.csv")
+file_name = os.path.join(directory, "B25075_raw.csv")
 
 
 # Check if the CSV file already exists
@@ -69,6 +70,35 @@ else:
     combined_data = pd.concat(all_data, ignore_index=True)
     combined_data.to_csv(file_name, index=False)
 ```
+
+```{python}
+# Cleaing the combined_data DF
+
+# Define the metadata (labels from Census) URL for the table
+metadata_url = "https://api.census.gov/data/2020/acs/acs5/variables"
+
+# Fetch metadata for relevant variables
+response = requests.get(metadata_url)
+metadata = response.json()
+
+# The rest of this relies on converting the metadata into a dictionary (I'm open to other suggestions how to do this? Seems maybe too complicated?)
+
+# Extract headers and data
+headers = metadata[0]  # ['name', 'label', 'concept']
+data = metadata[1:]    # Remaining rows
+
+# Filter metadata for variables belonging to table B25075
+table_prefix = "B25075_"
+filtered_data = [row for row in data if row[0].startswith(table_prefix)]
+
+# Create a dictionary with 'name' as the key and 'label' as the value
+metadata_dict = {row[0]: row[1] for row in filtered_data}
+
+# Renaming
+explore.rename(columns=metadata_dict, inplace=True)
+explore.columns = explore.columns.str.replace("!!", " ", regex=False)
+```
+
 
 ### City of Chicago Vacant Lot API Pull
  
@@ -101,7 +131,7 @@ directory = r"C:\Users\EM\Documents\GitHub\DAPII_final"
 
 
 ```{python}
-census_data = pd.read_csv(directory + "\B2575_raw.csv")
+census_data = pd.read_csv(directory + "\B25075_raw.csv")
 
 vacancy_data = pd.read_csv(directory + "\\vacant.csv")
 
