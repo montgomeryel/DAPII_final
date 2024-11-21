@@ -258,14 +258,18 @@ merged_census_and_geo['average_price'] = merged_census_and_geo.apply(ave_price, 
  
 Create plot
 ```{python}
+# excluding prices over $999,999
+import matplotlib.colors as mcolors
+norm=mcolors.Normalize(vmin=merged_census_and_geo['average_price'].min(), vmax=999999)
+
 fig, ax = plt.subplots(figsize=(10, 10))
 
 # Plot the city tracts
-merged_census_and_geo.plot(ax=ax, column='average_price', edgecolor='black').set_axis_off()
-ax.legend(loc='upper right')
+merged_census_and_geo.plot(ax=ax, column='average_price', edgecolor='black', legend=True, norm=norm).set_axis_off()
 
 #Plot the points
 vacancy_gdf.plot(ax=ax, color='red', markersize=5)
+plt.title('Average Housing Price (Upper Bound) by Tract with Vacant Lots')
 
 plt.show()
 ```
