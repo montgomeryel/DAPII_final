@@ -32,6 +32,8 @@ import pandas as pd
 import requests
 from census import Census
 from us import states
+```
+```{python}
 
 # Initialize the Census API with your API key
 #Ella's Census Key: 4baba8df9d607f462b00b40dea2f2e359b2b8fe6
@@ -126,22 +128,29 @@ vacant_df.to_csv('vacant.csv')
 
 Change as needed while collaborating and define all file paths as ditectory + '_'
 ```{python}
-directory = r"C:\Users\EM\Documents\GitHub\DAPII_final"
+directory = r"C:\Users\laine\OneDrive\Documents\GitHub\DAPII_final"
 ```
 
 
 ```{python}
-census_data = pd.read_csv(directory + "\B25075_raw.csv")
+census_data = pd.read_csv(directory + r"\B2575_raw.csv")
 
-vacancy_data = pd.read_csv(directory + "\\vacant.csv")
+vacancy_data = pd.read_csv(directory + r"\vacant.csv")
 
 ```
 
+```{python}
+census_data.rename(columns=metadata_dict, inplace=True)
+census_data.columns = census_data.columns.str.replace("!!", " ", regex=False)
+```
 
+```{python}
+census_data.head()
+```
 ```{python}
 import geopandas as gpd
 
-geo_data=gpd.read_file(directory + "\geo_export_babed850-df6f-42f1-a951-f174092d5ba8.shp")
+geo_data=gpd.read_file(directory + r"\geo_export_babed850-df6f-42f1-a951-f174092d5ba8.shp")
 
 ```
 
@@ -149,9 +158,6 @@ geo_data=gpd.read_file(directory + "\geo_export_babed850-df6f-42f1-a951-f174092d
 geo_data.head()
 ```
 
-```{python}
-census_data.head()
-```
 
 ```{python}
 #allign names for census_data and geo_data
@@ -195,4 +201,71 @@ vacancy_gdf.plot(ax=ax, color='red', markersize=5)
 
 plt.show()
 
+```
+
+```{python}
+merged_census_and_geo.columns[2:26]
+```
+
+### Housing Price Choropleth 
+```{python}
+ def ave_price(row):
+    # Multiplying values from columns based on the row
+    calc_1 = row['Estimate Total: Less than $10,000'] * 10000
+    calc_2 = row['Estimate Total: $10,000 to $14,999'] * 14999
+    calc_3 = row[merged_census_and_geo.columns[4]] * 19999
+    calc_4 = row[merged_census_and_geo.columns[5]] * 19999
+    calc_5 = row[merged_census_and_geo.columns[6]] * 24999
+    calc_6 = row[merged_census_and_geo.columns[7]] * 29999
+    calc_7 = row[merged_census_and_geo.columns[8]] * 34999
+    calc_8 = row[merged_census_and_geo.columns[9]] * 39999
+    calc_9 = row[merged_census_and_geo.columns[10]] * 39999
+    calc_10 = row[merged_census_and_geo.columns[11]] * 49999
+    calc_11 = row[merged_census_and_geo.columns[12]] * 69999
+    calc_12 = row[merged_census_and_geo.columns[13]] * 79999
+    calc_13 = row[merged_census_and_geo.columns[14]] * 89999
+    calc_14 = row[merged_census_and_geo.columns[15]] * 99999
+    calc_15 = row[merged_census_and_geo.columns[16]] * 124999
+    calc_16 = row[merged_census_and_geo.columns[17]] * 149999
+    calc_17 = row[merged_census_and_geo.columns[18]] * 174999
+    calc_18 = row[merged_census_and_geo.columns[19]] * 199999
+    calc_19 = row[merged_census_and_geo.columns[20]] * 249999
+    calc_20 = row[merged_census_and_geo.columns[21]] * 299999
+    calc_21 = row[merged_census_and_geo.columns[22]] * 399999
+    calc_22 = row[merged_census_and_geo.columns[23]] * 499999
+    calc_23 = row[merged_census_and_geo.columns[24]] * 749999
+    calc_24 = row[merged_census_and_geo.columns[25]] * 999999
+    calc_25 = row[merged_census_and_geo.columns[26]] * 1499999
+
+    numerator = (calc_1 + calc_2 + calc_3 + calc_4 + calc_5 + calc_6 +
+                 calc_7 + calc_8 + calc_9 + calc_10 + calc_11 + calc_12 +
+                 calc_13 + calc_14 + calc_15 + calc_16 + calc_17 + calc_18 +
+                 calc_19 + calc_20 + calc_21 + calc_22 + calc_23 + calc_24 +
+                 calc_25)
+
+    if row['Estimate Total:']==0:
+      average=0
+    else:
+      denominator = row['Estimate Total:']
+      average = numerator / denominator
+    return average
+
+
+# Apply the function to each row of the DataFrame
+merged_census_and_geo['average_price'] = merged_census_and_geo.apply(ave_price, axis=1)
+
+ ```
+ 
+Create plot
+```{python}
+fig, ax = plt.subplots(figsize=(10, 10))
+
+# Plot the city tracts
+merged_census_and_geo.plot(ax=ax, column='average_price', edgecolor='black').set_axis_off()
+ax.legend(loc='upper right')
+
+#Plot the points
+vacancy_gdf.plot(ax=ax, color='red', markersize=5)
+
+plt.show()
 ```
