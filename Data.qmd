@@ -204,44 +204,44 @@ plt.show()
 ```
 
 ```{python}
-merged_census_and_geo.columns[2:26]
+merged_census_and_geo.columns[2:27]
 ```
 
 ### Housing Price Choropleth 
 ```{python}
  def ave_price(row):
     # Multiplying values from columns based on the row
-    calc_1 = row['Estimate Total: Less than $10,000'] * 10000
-    calc_2 = row['Estimate Total: $10,000 to $14,999'] * 14999
-    calc_3 = row[merged_census_and_geo.columns[4]] * 19999
-    calc_4 = row[merged_census_and_geo.columns[5]] * 19999
-    calc_5 = row[merged_census_and_geo.columns[6]] * 24999
-    calc_6 = row[merged_census_and_geo.columns[7]] * 29999
-    calc_7 = row[merged_census_and_geo.columns[8]] * 34999
-    calc_8 = row[merged_census_and_geo.columns[9]] * 39999
-    calc_9 = row[merged_census_and_geo.columns[10]] * 39999
-    calc_10 = row[merged_census_and_geo.columns[11]] * 49999
-    calc_11 = row[merged_census_and_geo.columns[12]] * 69999
-    calc_12 = row[merged_census_and_geo.columns[13]] * 79999
-    calc_13 = row[merged_census_and_geo.columns[14]] * 89999
-    calc_14 = row[merged_census_and_geo.columns[15]] * 99999
-    calc_15 = row[merged_census_and_geo.columns[16]] * 124999
-    calc_16 = row[merged_census_and_geo.columns[17]] * 149999
-    calc_17 = row[merged_census_and_geo.columns[18]] * 174999
-    calc_18 = row[merged_census_and_geo.columns[19]] * 199999
-    calc_19 = row[merged_census_and_geo.columns[20]] * 249999
-    calc_20 = row[merged_census_and_geo.columns[21]] * 299999
-    calc_21 = row[merged_census_and_geo.columns[22]] * 399999
-    calc_22 = row[merged_census_and_geo.columns[23]] * 499999
-    calc_23 = row[merged_census_and_geo.columns[24]] * 749999
-    calc_24 = row[merged_census_and_geo.columns[25]] * 999999
-    calc_25 = row[merged_census_and_geo.columns[26]] * 1499999
+    calc_1 = row['Estimate Total: Less than $10,000'] * ((0+9999)/2)
+    calc_2 = row['Estimate Total: $10,000 to $14,999'] * ((10000+14999)/2)
+    calc_3 = row[merged_census_and_geo.columns[4]] * ((15000 +19999)/2)
+    calc_4 = row[merged_census_and_geo.columns[5]] * ((20000+24999)/2)
+    calc_5 = row[merged_census_and_geo.columns[6]] * ((25000+29999)/2)
+    calc_6 = row[merged_census_and_geo.columns[7]] * ((30000+34999)/2)
+    calc_7 = row[merged_census_and_geo.columns[8]] * ((35000+39999)/2)
+    calc_8 = row[merged_census_and_geo.columns[9]] * ((40000+49999)/2)
+    calc_9 = row[merged_census_and_geo.columns[10]] * ((50000+59999)/2)
+    calc_10 = row[merged_census_and_geo.columns[11]] * ((60000+69999)/2)
+    calc_11 = row[merged_census_and_geo.columns[12]] * ((70000+79999)/2)
+    calc_12 = row[merged_census_and_geo.columns[13]] * ((80000+89999)/2)
+    calc_13 = row[merged_census_and_geo.columns[14]] * ((90000+99999)/2)
+    calc_14 = row[merged_census_and_geo.columns[15]] * ((100000+124999)/2)
+    calc_15 = row[merged_census_and_geo.columns[16]] * ((125000+149999)/2)
+    calc_16 = row[merged_census_and_geo.columns[17]] * ((150000+174999)/2)
+    calc_17 = row[merged_census_and_geo.columns[18]] * ((175000+199999)/2)
+    calc_18 = row[merged_census_and_geo.columns[19]] * ((200000+249999)/2)
+    calc_19 = row[merged_census_and_geo.columns[20]] * ((250000+299999)/2)
+    calc_20 = row[merged_census_and_geo.columns[21]] * ((300000+399999)/2)
+    calc_21 = row[merged_census_and_geo.columns[22]] * ((400000+499999)/2)
+    calc_22 = row[merged_census_and_geo.columns[23]] * ((500000+749999)/2)
+    calc_23 = row[merged_census_and_geo.columns[24]] * ((75000+999999)/2)
+    calc_24 = row[merged_census_and_geo.columns[25]] * ((1000000+1499999)/2)
+    
 
     numerator = (calc_1 + calc_2 + calc_3 + calc_4 + calc_5 + calc_6 +
                  calc_7 + calc_8 + calc_9 + calc_10 + calc_11 + calc_12 +
                  calc_13 + calc_14 + calc_15 + calc_16 + calc_17 + calc_18 +
-                 calc_19 + calc_20 + calc_21 + calc_22 + calc_23 + calc_24 +
-                 calc_25)
+                 calc_19 + calc_20 + calc_21 + calc_22 + calc_23 + calc_24
+                 )
 
     if row['Estimate Total:']==0:
       average=0
@@ -269,7 +269,7 @@ merged_census_and_geo.plot(ax=ax, column='average_price', edgecolor='black', leg
 
 #Plot the points
 vacancy_gdf.plot(ax=ax, color='red', markersize=5)
-plt.title('Average Housing Price (Upper Bound) by Tract with Vacant Lots')
+plt.title('Average Housing Price by Census Tract with Vacant Lots')
 
 plt.show()
 ```
