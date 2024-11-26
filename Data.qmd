@@ -96,15 +96,13 @@ filtered_data = [row for row in data if row[0].startswith(table_prefix)]
 # Create a dictionary with 'name' as the key and 'label' as the value
 metadata_dict = {row[0]: row[1] for row in filtered_data}
 
-# Renaming
-explore.rename(columns=metadata_dict, inplace=True)
-explore.columns = explore.columns.str.replace("!!", " ", regex=False)
+
 ```
 
 
 ### City of Chicago Vacant Lot API Pull
  
-This section grabs data from [this](https://data.cityofchicago.org/resource/kc9i-wq85.csv) CoC source.
+This section grabs data from [this](https://data.cityofchicago.org/resource/kc9i-wq85.csv) city of Chicago source.
 
 ```{python}
 # make sure to install this package before running:
@@ -124,11 +122,11 @@ vacant_df.to_csv('vacant.csv')
 
 
 ### Checkpoint; data has been acquired
-## Set Directory
+### Set Directory
 
 Change as needed while collaborating and define all file paths as ditectory + '_'
 ```{python}
-directory = r"C:\Users\laine\OneDrive\Documents\GitHub\DAPII_final"
+directory = r"C:\Users\EM\Documents\GitHub\DAPII_final"
 ```
 
 
@@ -172,6 +170,28 @@ merged_census_and_geo.head()
 ```
 
 ### Plotting Data
+Vacant lot write-ups per year
+```{python}
+import altair as alt
+
+vacancy_data['issued_date'] = pd.to_datetime(vacancy_data['issued_date'])
+
+vacancy_data['year'] = vacancy_data['issued_date'].dt.year
+
+#count the number of violations per year
+violations_per_year = vacancy_data.groupby('year').size().reset_index(name='count')
+
+line_chart = alt.Chart(violations_per_year).mark_line().encode(
+    x=alt.X('year:O', scale=alt.Scale(domain=list(range(2011, violations_per_year['year'].max() + 1)))),
+    y='count:Q'
+).properties(
+    title='Count of Violations per Year'
+)
+
+line_chart
+
+```
+
 Here we will test our geo data
 
 ```{python}
@@ -273,3 +293,5 @@ plt.title('Average Housing Price (Upper Bound) by Tract with Vacant Lots')
 
 plt.show()
 ```
+
+###
