@@ -68,9 +68,18 @@ else:
         df['year'] = year
         all_data.append(df)
 
-    # Combine all data into a single DataFrame
-    combined_data = pd.concat(all_data, ignore_index=True)
-    combined_data.to_csv(file_name, index=False)
+crosswalk_file = "zcta_tract_cross_walk_2010_census.csv"
+crosswalk = pd.read_csv(crosswalk_file)
+
+# Merge combined data with the crosswalk
+state_county_tract_zcta_prices = combined_data.merge(crosswalk, on='tract_id', how='left')
+
+# Save the final combined data with ZIP codes
+state_county_tract_zcta_prices.to_csv(file_name, index=False)
+
+# Combine all data into a single DataFrame
+combined_data = pd.concat(all_data, ignore_index=True)
+combined_data.to_csv(file_name, index=False)
 ```
 
 ```{python}
