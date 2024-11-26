@@ -32,6 +32,7 @@ import pandas as pd
 import requests
 from census import Census
 from us import states
+import json
 ```
 ```{python}
 
@@ -40,14 +41,16 @@ from us import states
 census_key = "28685c677403ed1719764eb8ba7a6087d00544fb"
 c = Census(census_key)
 
-# Define the output directory and file name
-directory = r"C:\Users\laine\OneDrive\Documents\GitHub\DAPII_final"
+# Define the output directory and file names
+directory = r"/Users/griffinsharps/Documents/Repos/DAPII_final"
 file_name = os.path.join(directory, "B25075_raw.csv")
+crosswalk_url = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_tract_rel_10.txt"
+crosswalk_file = os.path.join(directory, "zcta_tract_cross_walk_2010_census.csv")
 
-
-# Check if the CSV file already exists
+# Check if the Census API data file already exists
 if os.path.exists(file_name):
-    print("Data file already exists. Skipping API call.")
+    print("Census data file already exists. Skipping API call.")
+    combined_data = pd.read_csv(file_name)
 else:
     variables = [f"B25075_{str(i).zfill(3)}E" for i in range(1, 26)]
     county_code = "031"  # Cook County
@@ -56,6 +59,7 @@ else:
     all_data = []
 
     for year in years:
+        print(f"Fetching Census data for year {year}...")
         data = c.acs5.state_county_tract(
             fields=["NAME"] + variables,
             state_fips=state_code,
@@ -68,31 +72,56 @@ else:
         df['year'] = year
         all_data.append(df)
 
-crosswalk_file = "zcta_tract_cross_walk_2010_census.csv"
-crosswalk = pd.read_csv(crosswalk_file)
+    # Combine all data into a single DataFrame
+    combined_data = pd.concat(all_data, ignore_index=True)
+    combined_data.to_csv(file_name, index=False)
+    print(f"Census data saved to {file_name}.")
+
+# Check if the crosswalk file already exists
+if os.path.exists(crosswalk_file):
+    print("Crosswalk file already exists. Skipping download.")
+else:
+    print("Downloading crosswalk file...")
+    crosswalk_raw = pd.read_csv(crosswalk_url, delimiter=',', dtype=str)
+    crosswalk_raw.to_csv(crosswalk_file, index=False)
+    print(f"Crosswalk file saved to {crosswalk_file}.")
+
+# Load the crosswalk file
+crosswalk_raw = pd.read_csv(crosswalk_file)
+crosswalk_raw["tract"] = crosswalk_raw["TRACT"].astype(str)
+crosswalk_merge = crosswalk_raw[["tract", "ZCTA5"]]
 
 # Merge combined data with the crosswalk
-state_county_tract_zcta_prices = combined_data.merge(crosswalk, on='tract_id', how='left')
+state_county_tract_zcta_prices = combined_data.astype({'tract': 'str'}).merge(
+    crosswalk_merge, 
+    how='left', 
+    on='tract'
+)
 
-# Save the final combined data with ZIP codes
-state_county_tract_zcta_prices.to_csv(file_name, index=False)
-
-# Combine all data into a single DataFrame
-combined_data = pd.concat(all_data, ignore_index=True)
-combined_data.to_csv(file_name, index=False)
+# Save the final merged DataFrame to a new CSV
+output_file = os.path.join(directory, "state_county_tract_zcta_prices.csv")
+state_county_tract_zcta_prices.to_csv(output_file, index=False)
 ```
 
 ```{python}
-# Cleaing the combined_data DF
-
-# Define the metadata (labels from Census) URL for the table
+# Column names
+metadata_file = os.path.join(directory, "B25075_metadata.json")
 metadata_url = "https://api.census.gov/data/2020/acs/acs5/variables"
 
-# Fetch metadata for relevant variables
-response = requests.get(metadata_url)
-metadata = response.json()
+# Check if metadata file exists locally
+if os.path.exists(metadata_file):
+    print("Metadata file exists. Loading from local file...")
+    with open(metadata_file, "r") as f:
+        metadata = json.load(f)
+else:
+    print("Metadata file does not exist. Fetching from API...")
+    response = requests.get(metadata_url)
+    metadata = response.json()
 
-# The rest of this relies on converting the metadata into a dictionary (I'm open to other suggestions how to do this? Seems maybe too complicated?)
+    # Save metadata to a local file for future use
+    with open(metadata_file, "w") as f:
+        json.dump(metadata, f)
+    print(f"Metadata saved to {metadata_file}.")
 
 # Extract headers and data
 headers = metadata[0]  # ['name', 'label', 'concept']
@@ -105,11 +134,31 @@ filtered_data = [row for row in data if row[0].startswith(table_prefix)]
 # Create a dictionary with 'name' as the key and 'label' as the value
 metadata_dict = {row[0]: row[1] for row in filtered_data}
 
-# Renaming
-explore.rename(columns=metadata_dict, inplace=True)
-explore.columns = explore.columns.str.replace("!!", " ", regex=False)
+# Rename columns based on metadata_dict
+census_data_complete = state_county_tract_zcta_prices.rename(columns=metadata_dict)
+
+# Replace "!!" in column names with a space
+census_data_complete.columns = census_data_complete.columns.str.replace("!!", " ", regex=False)
 ```
 
+```{python}
+# Chicago Community Areas
+
+csv_file = os.path.join(directory, "community_areas_raw.csv")
+csv_url = "https://data.cityofchicago.org/api/views/igwz-8jzy/rows.csv?date=20241125&accessType=DOWNLOAD"
+
+# Check if the CSV file exists locally
+if not os.path.exists(csv_file):
+    print("CSV file does not exist locally. Downloading...")
+    response = requests.get(csv_url)
+    response.raise_for_status() 
+    with open(csv_file, "wb") as f:
+        f.write(response.content)
+    print(f"CSV file downloaded and saved to {csv_file}.")
+
+# Load the CSV file into a DataFrame
+community_areas = pd.read_csv(csv_file)
+```
 
 ### City of Chicago Vacant Lot API Pull
  
