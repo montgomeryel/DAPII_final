@@ -32,6 +32,7 @@ import pandas as pd
 import requests
 from census import Census
 from us import states
+import json
 ```
 ```{python}
 
@@ -40,14 +41,16 @@ from us import states
 census_key = "28685c677403ed1719764eb8ba7a6087d00544fb"
 c = Census(census_key)
 
-# Define the output directory and file name
-directory = r"C:\Users\laine\OneDrive\Documents\GitHub\DAPII_final"
+# Define the output directory and file names
+directory = r"/Users/griffinsharps/Documents/Repos/DAPII_final"
 file_name = os.path.join(directory, "B25075_raw.csv")
+crosswalk_url = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_tract_rel_10.txt"
+crosswalk_file = os.path.join(directory, "zcta_tract_cross_walk_2010_census.csv")
 
-
-# Check if the CSV file already exists
+# Check if the Census API data file already exists
 if os.path.exists(file_name):
-    print("Data file already exists. Skipping API call.")
+    print("Census data file already exists. Skipping API call.")
+    combined_data = pd.read_csv(file_name)
 else:
     variables = [f"B25075_{str(i).zfill(3)}E" for i in range(1, 26)]
     county_code = "031"  # Cook County
@@ -56,6 +59,7 @@ else:
     all_data = []
 
     for year in years:
+        print(f"Fetching Census data for year {year}...")
         data = c.acs5.state_county_tract(
             fields=["NAME"] + variables,
             state_fips=state_code,
@@ -71,19 +75,53 @@ else:
     # Combine all data into a single DataFrame
     combined_data = pd.concat(all_data, ignore_index=True)
     combined_data.to_csv(file_name, index=False)
+    print(f"Census data saved to {file_name}.")
+
+# Check if the crosswalk file already exists
+if os.path.exists(crosswalk_file):
+    print("Crosswalk file already exists. Skipping download.")
+else:
+    print("Downloading crosswalk file...")
+    crosswalk_raw = pd.read_csv(crosswalk_url, delimiter=',', dtype=str)
+    crosswalk_raw.to_csv(crosswalk_file, index=False)
+    print(f"Crosswalk file saved to {crosswalk_file}.")
+
+# Load the crosswalk file
+crosswalk_raw = pd.read_csv(crosswalk_file)
+crosswalk_raw["tract"] = crosswalk_raw["TRACT"].astype(str)
+crosswalk_merge = crosswalk_raw[["tract", "ZCTA5"]]
+
+# Merge combined data with the crosswalk
+state_county_tract_zcta_prices = combined_data.astype({'tract': 'str'}).merge(
+    crosswalk_merge, 
+    how='left', 
+    on='tract'
+)
+
+# Save the final merged DataFrame to a new CSV
+output_file = os.path.join(directory, "state_county_tract_zcta_prices.csv")
+state_county_tract_zcta_prices.to_csv(output_file, index=False)
 ```
 
 ```{python}
-# Cleaing the combined_data DF
-
-# Define the metadata (labels from Census) URL for the table
+# Column names
+metadata_file = os.path.join(directory, "B25075_metadata.json")
 metadata_url = "https://api.census.gov/data/2020/acs/acs5/variables"
 
-# Fetch metadata for relevant variables
-response = requests.get(metadata_url)
-metadata = response.json()
+# Check if metadata file exists locally
+if os.path.exists(metadata_file):
+    print("Metadata file exists. Loading from local file...")
+    with open(metadata_file, "r") as f:
+        metadata = json.load(f)
+else:
+    print("Metadata file does not exist. Fetching from API...")
+    response = requests.get(metadata_url)
+    metadata = response.json()
 
-# The rest of this relies on converting the metadata into a dictionary (I'm open to other suggestions how to do this? Seems maybe too complicated?)
+    # Save metadata to a local file for future use
+    with open(metadata_file, "w") as f:
+        json.dump(metadata, f)
+    print(f"Metadata saved to {metadata_file}.")
 
 # Extract headers and data
 headers = metadata[0]  # ['name', 'label', 'concept']
@@ -99,6 +137,24 @@ metadata_dict = {row[0]: row[1] for row in filtered_data}
 
 ```
 
+```{python}
+# Chicago Community Areas
+
+csv_file = os.path.join(directory, "community_areas_raw.csv")
+csv_url = "https://data.cityofchicago.org/api/views/igwz-8jzy/rows.csv?date=20241125&accessType=DOWNLOAD"
+
+# Check if the CSV file exists locally
+if not os.path.exists(csv_file):
+    print("CSV file does not exist locally. Downloading...")
+    response = requests.get(csv_url)
+    response.raise_for_status() 
+    with open(csv_file, "wb") as f:
+        f.write(response.content)
+    print(f"CSV file downloaded and saved to {csv_file}.")
+
+# Load the CSV file into a DataFrame
+community_areas = pd.read_csv(csv_file)
+```
 
 ### City of Chicago Vacant Lot API Pull
  
@@ -224,44 +280,44 @@ plt.show()
 ```
 
 ```{python}
-merged_census_and_geo.columns[2:26]
+merged_census_and_geo.columns[2:27]
 ```
 
 ### Housing Price Choropleth 
 ```{python}
  def ave_price(row):
     # Multiplying values from columns based on the row
-    calc_1 = row['Estimate Total: Less than $10,000'] * 10000
-    calc_2 = row['Estimate Total: $10,000 to $14,999'] * 14999
-    calc_3 = row[merged_census_and_geo.columns[4]] * 19999
-    calc_4 = row[merged_census_and_geo.columns[5]] * 19999
-    calc_5 = row[merged_census_and_geo.columns[6]] * 24999
-    calc_6 = row[merged_census_and_geo.columns[7]] * 29999
-    calc_7 = row[merged_census_and_geo.columns[8]] * 34999
-    calc_8 = row[merged_census_and_geo.columns[9]] * 39999
-    calc_9 = row[merged_census_and_geo.columns[10]] * 39999
-    calc_10 = row[merged_census_and_geo.columns[11]] * 49999
-    calc_11 = row[merged_census_and_geo.columns[12]] * 69999
-    calc_12 = row[merged_census_and_geo.columns[13]] * 79999
-    calc_13 = row[merged_census_and_geo.columns[14]] * 89999
-    calc_14 = row[merged_census_and_geo.columns[15]] * 99999
-    calc_15 = row[merged_census_and_geo.columns[16]] * 124999
-    calc_16 = row[merged_census_and_geo.columns[17]] * 149999
-    calc_17 = row[merged_census_and_geo.columns[18]] * 174999
-    calc_18 = row[merged_census_and_geo.columns[19]] * 199999
-    calc_19 = row[merged_census_and_geo.columns[20]] * 249999
-    calc_20 = row[merged_census_and_geo.columns[21]] * 299999
-    calc_21 = row[merged_census_and_geo.columns[22]] * 399999
-    calc_22 = row[merged_census_and_geo.columns[23]] * 499999
-    calc_23 = row[merged_census_and_geo.columns[24]] * 749999
-    calc_24 = row[merged_census_and_geo.columns[25]] * 999999
-    calc_25 = row[merged_census_and_geo.columns[26]] * 1499999
+    calc_1 = row['Estimate Total: Less than $10,000'] * ((0+9999)/2)
+    calc_2 = row['Estimate Total: $10,000 to $14,999'] * ((10000+14999)/2)
+    calc_3 = row[merged_census_and_geo.columns[4]] * ((15000 +19999)/2)
+    calc_4 = row[merged_census_and_geo.columns[5]] * ((20000+24999)/2)
+    calc_5 = row[merged_census_and_geo.columns[6]] * ((25000+29999)/2)
+    calc_6 = row[merged_census_and_geo.columns[7]] * ((30000+34999)/2)
+    calc_7 = row[merged_census_and_geo.columns[8]] * ((35000+39999)/2)
+    calc_8 = row[merged_census_and_geo.columns[9]] * ((40000+49999)/2)
+    calc_9 = row[merged_census_and_geo.columns[10]] * ((50000+59999)/2)
+    calc_10 = row[merged_census_and_geo.columns[11]] * ((60000+69999)/2)
+    calc_11 = row[merged_census_and_geo.columns[12]] * ((70000+79999)/2)
+    calc_12 = row[merged_census_and_geo.columns[13]] * ((80000+89999)/2)
+    calc_13 = row[merged_census_and_geo.columns[14]] * ((90000+99999)/2)
+    calc_14 = row[merged_census_and_geo.columns[15]] * ((100000+124999)/2)
+    calc_15 = row[merged_census_and_geo.columns[16]] * ((125000+149999)/2)
+    calc_16 = row[merged_census_and_geo.columns[17]] * ((150000+174999)/2)
+    calc_17 = row[merged_census_and_geo.columns[18]] * ((175000+199999)/2)
+    calc_18 = row[merged_census_and_geo.columns[19]] * ((200000+249999)/2)
+    calc_19 = row[merged_census_and_geo.columns[20]] * ((250000+299999)/2)
+    calc_20 = row[merged_census_and_geo.columns[21]] * ((300000+399999)/2)
+    calc_21 = row[merged_census_and_geo.columns[22]] * ((400000+499999)/2)
+    calc_22 = row[merged_census_and_geo.columns[23]] * ((500000+749999)/2)
+    calc_23 = row[merged_census_and_geo.columns[24]] * ((75000+999999)/2)
+    calc_24 = row[merged_census_and_geo.columns[25]] * ((1000000+1499999)/2)
+    
 
     numerator = (calc_1 + calc_2 + calc_3 + calc_4 + calc_5 + calc_6 +
                  calc_7 + calc_8 + calc_9 + calc_10 + calc_11 + calc_12 +
                  calc_13 + calc_14 + calc_15 + calc_16 + calc_17 + calc_18 +
-                 calc_19 + calc_20 + calc_21 + calc_22 + calc_23 + calc_24 +
-                 calc_25)
+                 calc_19 + calc_20 + calc_21 + calc_22 + calc_23 + calc_24
+                 )
 
     if row['Estimate Total:']==0:
       average=0
@@ -289,7 +345,7 @@ merged_census_and_geo.plot(ax=ax, column='average_price', edgecolor='black', leg
 
 #Plot the points
 vacancy_gdf.plot(ax=ax, color='red', markersize=5)
-plt.title('Average Housing Price (Upper Bound) by Tract with Vacant Lots')
+plt.title('Average Housing Price by Census Tract with Vacant Lots')
 
 plt.show()
 ```
