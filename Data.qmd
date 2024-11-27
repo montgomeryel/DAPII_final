@@ -34,6 +34,13 @@ from census import Census
 from us import states
 import json
 ```
+
+### Set Directory
+
+```{python}
+# Define the output directory and file names
+directory = r"C:\Users\laine\OneDrive\Documents\GitHub\DAPII_final"
+```
 ```{python}
 
 # Initialize the Census API with your API key
@@ -41,8 +48,6 @@ import json
 census_key = "28685c677403ed1719764eb8ba7a6087d00544fb"
 c = Census(census_key)
 
-# Define the output directory and file names
-directory = r"/Users/griffinsharps/Documents/Repos/DAPII_final"
 file_name = os.path.join(directory, "B25075_raw.csv")
 crosswalk_url = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_tract_rel_10.txt"
 crosswalk_file = os.path.join(directory, "zcta_tract_cross_walk_2010_census.csv")
@@ -178,16 +183,10 @@ vacant_df.to_csv('vacant.csv')
 
 
 ### Checkpoint; data has been acquired
-### Set Directory
-
-Change as needed while collaborating and define all file paths as ditectory + '_'
-```{python}
-directory = r"C:\Users\EM\Documents\GitHub\DAPII_final"
-```
 
 
 ```{python}
-census_data = pd.read_csv(directory + r"\B2575_raw.csv")
+census_data=pd.read_csv(directory +r'\state_county_tract_zcta_prices.csv')
 
 vacancy_data = pd.read_csv(directory + r"\vacant.csv")
 
@@ -201,6 +200,7 @@ census_data.columns = census_data.columns.str.replace("!!", " ", regex=False)
 ```{python}
 census_data.head()
 ```
+Flagging that 18430 shows as 01843 shows as 1843.0
 ```{python}
 import geopandas as gpd
 
@@ -351,3 +351,7 @@ plt.show()
 ```
 
 ###
+
+
+```{python}
+```
