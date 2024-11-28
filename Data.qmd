@@ -34,15 +34,18 @@ from census import Census
 from us import states
 import json
 ```
-```{python}
 
+```{python}
+# Define the output directory and file names
+directory = r"C:\Users\laine\OneDrive\Documents\GitHub\DAPII_final"
+```
+```{python}
 # Initialize the Census API with your API key
 #Ella's Census Key: 4baba8df9d607f462b00b40dea2f2e359b2b8fe6
 census_key = "28685c677403ed1719764eb8ba7a6087d00544fb"
 c = Census(census_key)
 
-# Define the output directory and file names
-directory = r"/Users/griffinsharps/Documents/Repos/DAPII_final"
+
 file_name = os.path.join(directory, "B25075_raw.csv")
 crosswalk_url = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_tract_rel_10.txt"
 crosswalk_file = os.path.join(directory, "zcta_tract_cross_walk_2010_census.csv")
