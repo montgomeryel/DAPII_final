@@ -427,83 +427,19 @@ plt.title('Average Household Income by Census Tract with Vacant Lots')
 plt.show()
 ```
 
-
 ```{python}
-#create a list of ZCTA5s
-merged_census_and_geo['ZCTA5']=merged_census_and_geo['ZCTA5'].map(str)
-zips=merged_census_and_geo.groupby('ZCTA5')
-zips_size=zips.size().reset_index()
-zips_list=zips_size['ZCTA5']
-```
+dissolved = merged_census_and_geo[['ZCTA5', 'geometry', 'average_price', 'average_income']].dissolve(by="ZCTA5", aggfunc="mean")
 
-```{python}
-# create a list of avg  household income aggregated by ZCTA5
-avg_income_list=[]
-for zip in zips_list:
-    subset=merged_census_and_geo[merged_census_and_geo['ZCTA5']==zip]
-    numerator=subset['average_income'].sum()
-    denominator=len(subset)
-    if denominator==0:
-        zip_avg_income=0
-    else:
-        zip_avg_income=numerator/denominator
-    avg_income_list.append(zip_avg_income)
-```
-
-```{python}
-# create a list of avg home price aggregated by ZCTA5
-avg_price_list=[]
-for zip in zips_list:
-    subset=merged_census_and_geo[merged_census_and_geo['ZCTA5']==zip]
-    numerator=subset['average_price'].sum()
-    denominator=len(subset)
-    if denominator==0:
-        zip_avg_price=0
-    else:
-        zip_avg_price=numerator/denominator
-        print(denominator)
-    avg_price_list.append(zip_avg_price)
-```
-
-
-```{python}
-#create a dataframe with the new ZCTA5 vars
-zip_df = pd.DataFrame({
-    'ZCTA5': zips_list,
-    'ZCTA5_avg_income': avg_income_list,
-    'ZCTA5_avg_price': avg_price_list
-})
-
- ```
-
-```{python}
-zip_df['ZCTA5_avg_income'].max()
-```
- 
- ```{python}
- #match the aggregated values back to the tract geometries 
- merged_zips=merged_census_and_geo.merge(zip_df, on='ZCTA5', how='left')
- merged_zips=gpd.GeoDataFrame(merged_zips, geometry='geometry')
- #merged_zips.head()
-
- ```
-
-
-```{python}
-dissolved = merged_zips.dissolve(
-by="ZCTA5", aggfunc="sum"
-)
 dissolved = dissolved.reset_index()
+
 
 ```
 ```{python}
 #create avg household income map by ZCTA5
-norm=mcolors.Normalize(vmin=dissolved['ZCTA5_avg_income'].min(), vmax=3500000)
-
 fig, ax = plt.subplots(figsize=(10, 10))
 
 # Plot the city tracts
-dissolved.plot(ax=ax, column='ZCTA5_avg_income', legend=True, edgecolor='black').set_axis_off()
+dissolved.plot(ax=ax, column='average_income', legend=True, edgecolor='black').set_axis_off()
 
 
 #Plot the points
@@ -514,17 +450,11 @@ plt.show()
 ```
 
 ```{python}
-dissolved['ZCTA5_avg_income'].mean()
-```
-
-```{python}
 #create avg home value map by ZCTA5
-norm=mcolors.Normalize(vmin=dissolved['ZCTA5_avg_price'].min(), vmax=9999999)
-
 fig, ax = plt.subplots(figsize=(10, 10))
 
 # Plot the city tracts
-dissolved.plot(ax=ax, column='ZCTA5_avg_price', legend=True, edgecolor='black', norm=norm).set_axis_off()
+dissolved.plot(ax=ax, column='average_price', legend=True, edgecolor='black').set_axis_off()
 
 
 #Plot the points
