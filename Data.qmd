@@ -52,7 +52,7 @@ crosswalk_url = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_tract_
 crosswalk_file = os.path.join(directory, "zcta_tract_cross_walk_2010_census.csv")
 
 # Check if the Census API data file already exists
-if os.path.exists(file_name):
+if os.path.exists(file_name+'1'):
     print("Census data file already exists. Skipping API call.")
     combined_data = pd.read_csv(file_name)
 else:
@@ -210,21 +210,10 @@ vacant_df.to_csv('vacant.csv')
 
 
 ```{python}
-census_data=pd.read_csv(directory +r'\state_county_tract_zcta_prices.csv')
-
 vacancy_data = pd.read_csv(directory + r"\vacant.csv")
-
 ```
 
-```{python}
-census_data.rename(columns=metadata_dict, inplace=True)
-census_data.columns = census_data.columns.str.replace("!!", " ", regex=False)
-```
 
-```{python}
-census_data.head()
-```
-Flagging that 18430 shows as 01843 shows as 1843.0
 ```{python}
 import geopandas as gpd
 
@@ -239,12 +228,12 @@ geo_data.head()
 
 ```{python}
 #allign names for census_data and geo_data
-census_data['NAME']=census_data['NAME'].str.replace(", Cook County, Illinois", "")
+census_df['NAME']=census_df['NAME'].str.replace(", Cook County, Illinois", "")
 
 ```
 
 ```{python}
-merged_census_and_geo=census_data.merge(geo_data, left_on='NAME', right_on='namelsad10', how='left')
+merged_census_and_geo=census_df.merge(geo_data, left_on='NAME', right_on='namelsad10', how='left')
 merged_census_and_geo=gpd.GeoDataFrame(merged_census_and_geo, geometry='geometry')
 merged_census_and_geo.head()
 ```
@@ -275,7 +264,6 @@ line_chart
 Here we will test our geo data
 
 ```{python}
-import altair as alt
 import matplotlib.pyplot as plt
 from shapely.geometry import Point
 
@@ -304,15 +292,16 @@ plt.show()
 ```
 
 ```{python}
-merged_census_and_geo.columns[2:27]
+merged_census_and_geo.columns[2:26]
+
 ```
 
 ### Housing Price Choropleth 
 ```{python}
  def ave_price(row):
     # Multiplying values from columns based on the row
-    calc_1 = row['Estimate Total: Less than $10,000'] * ((0+9999)/2)
-    calc_2 = row['Estimate Total: $10,000 to $14,999'] * ((10000+14999)/2)
+    calc_1 = row['Home Value Estimate Total: Less than $10,000'] * ((0+9999)/2)
+    calc_2 = row['Home Value Estimate Total: $10,000 to $14,999'] * ((10000+14999)/2)
     calc_3 = row[merged_census_and_geo.columns[4]] * ((15000 +19999)/2)
     calc_4 = row[merged_census_and_geo.columns[5]] * ((20000+24999)/2)
     calc_5 = row[merged_census_and_geo.columns[6]] * ((25000+29999)/2)
@@ -343,10 +332,10 @@ merged_census_and_geo.columns[2:27]
                  calc_19 + calc_20 + calc_21 + calc_22 + calc_23 + calc_24
                  )
 
-    if row['Estimate Total:']==0:
+    if row['Home Value Estimate Total:']==0:
       average=0
     else:
-      denominator = row['Estimate Total:']
+      denominator = row['Home Value Estimate Total:']
       average = numerator / denominator
     return average
 
@@ -374,8 +363,173 @@ plt.title('Average Housing Price by Census Tract with Vacant Lots')
 plt.show()
 ```
 
-###
+### Household Income Maps 
 
 
 ```{python}
+merged_census_and_geo.columns[27:44]
+```
+
+```{python}
+def ave_income(row):
+    # Multiplying values from columns based on the row
+    calc_1 = row[merged_census_and_geo.columns[28]] * ((0+9999)/2)
+    calc_2 = row[merged_census_and_geo.columns[29]] * ((10000+14999)/2)
+    calc_3 = row[merged_census_and_geo.columns[30]] * ((15000 +19999)/2)
+    calc_4 = row[merged_census_and_geo.columns[31]] * ((20000+24999)/2)
+    calc_5 = row[merged_census_and_geo.columns[32]] * ((25000+29999)/2)
+    calc_6 = row[merged_census_and_geo.columns[33]] * ((30000+34999)/2)
+    calc_7 = row[merged_census_and_geo.columns[34]] * ((35000+39999)/2)
+    calc_8 = row[merged_census_and_geo.columns[35]] * ((40000+44999)/2)
+    calc_9 = row[merged_census_and_geo.columns[36]] * ((45000+49999)/2)
+    calc_10 = row[merged_census_and_geo.columns[37]] * ((50000+59999)/2)
+    calc_11 = row[merged_census_and_geo.columns[38]] * ((60000+74999)/2)
+    calc_12 = row[merged_census_and_geo.columns[39]] * ((75000+99999)/2)
+    calc_13 = row[merged_census_and_geo.columns[40]] * ((100000+124999)/2)
+    calc_14 = row[merged_census_and_geo.columns[41]] * ((125000+14999)/2)
+    calc_15 = row[merged_census_and_geo.columns[42]] * ((150000+199999)/2)
+    calc_16 = row[merged_census_and_geo.columns[43]] * ((200000+1000000)/2)
+    
+    
+
+    numerator = (calc_1 + calc_2 + calc_3 + calc_4 + calc_5 + calc_6 +
+                 calc_7 + calc_8 + calc_9 + calc_10 + calc_11 + calc_12 +
+                 calc_13 + calc_14 + calc_15 + calc_16)
+
+    if row['Household Income Estimate Total:']==0:
+      average=0
+    else:
+      denominator = row['Household Income Estimate Total:']
+      average = numerator / denominator
+    return average
+
+
+# Apply the function to each row of the DataFrame
+merged_census_and_geo['average_income'] = merged_census_and_geo.apply(ave_income, axis=1)
+```
+
+
+```{python}
+#creating average household income by census tract map
+# excluding incomes over 199,999
+import matplotlib.colors as mcolors
+norm=mcolors.Normalize(vmin=merged_census_and_geo['average_price'].min(), vmax=199999)
+
+fig, ax = plt.subplots(figsize=(10, 10))
+
+# Plot the city tracts
+merged_census_and_geo.plot(ax=ax, column='average_income', edgecolor='black', legend=True, norm=norm).set_axis_off()
+
+#Plot the points
+vacancy_gdf.plot(ax=ax, color='red', markersize=5)
+plt.title('Average Household Income by Census Tract with Vacant Lots')
+
+plt.show()
+```
+
+
+```{python}
+#create a list of ZCTA5s
+merged_census_and_geo['ZCTA5']=merged_census_and_geo['ZCTA5'].map(str)
+zips=merged_census_and_geo.groupby('ZCTA5')
+zips_size=zips.size().reset_index()
+zips_list=zips_size['ZCTA5']
+```
+
+```{python}
+# create a list of avg  household income aggregated by ZCTA5
+avg_income_list=[]
+for zip in zips_list:
+    subset=merged_census_and_geo[merged_census_and_geo['ZCTA5']==zip]
+    numerator=subset['average_income'].sum()
+    denominator=len(subset)
+    if denominator==0:
+        zip_avg_income=0
+    else:
+        zip_avg_income=numerator/denominator
+    avg_income_list.append(zip_avg_income)
+```
+
+```{python}
+# create a list of avg home price aggregated by ZCTA5
+avg_price_list=[]
+for zip in zips_list:
+    subset=merged_census_and_geo[merged_census_and_geo['ZCTA5']==zip]
+    numerator=subset['average_price'].sum()
+    denominator=len(subset)
+    if denominator==0:
+        zip_avg_price=0
+    else:
+        zip_avg_price=numerator/denominator
+        print(denominator)
+    avg_price_list.append(zip_avg_price)
+```
+
+
+```{python}
+#create a dataframe with the new ZCTA5 vars
+zip_df = pd.DataFrame({
+    'ZCTA5': zips_list,
+    'ZCTA5_avg_income': avg_income_list,
+    'ZCTA5_avg_price': avg_price_list
+})
+
+ ```
+
+```{python}
+zip_df['ZCTA5_avg_income'].max()
+```
+ 
+ ```{python}
+ #match the aggregated values back to the tract geometries 
+ merged_zips=merged_census_and_geo.merge(zip_df, on='ZCTA5', how='left')
+ merged_zips=gpd.GeoDataFrame(merged_zips, geometry='geometry')
+ #merged_zips.head()
+
+ ```
+
+
+```{python}
+dissolved = merged_zips.dissolve(
+by="ZCTA5", aggfunc="sum"
+)
+dissolved = dissolved.reset_index()
+
+```
+```{python}
+#create avg household income map by ZCTA5
+norm=mcolors.Normalize(vmin=dissolved['ZCTA5_avg_income'].min(), vmax=3500000)
+
+fig, ax = plt.subplots(figsize=(10, 10))
+
+# Plot the city tracts
+dissolved.plot(ax=ax, column='ZCTA5_avg_income', legend=True, edgecolor='black').set_axis_off()
+
+
+#Plot the points
+vacancy_gdf.plot(ax=ax, color='red', markersize=5)
+plt.title('Average Household Income by ZCTA5 with Vacant Lots')
+
+plt.show()
+```
+
+```{python}
+dissolved['ZCTA5_avg_income'].mean()
+```
+
+```{python}
+#create avg home value map by ZCTA5
+norm=mcolors.Normalize(vmin=dissolved['ZCTA5_avg_price'].min(), vmax=9999999)
+
+fig, ax = plt.subplots(figsize=(10, 10))
+
+# Plot the city tracts
+dissolved.plot(ax=ax, column='ZCTA5_avg_price', legend=True, edgecolor='black', norm=norm).set_axis_off()
+
+
+#Plot the points
+vacancy_gdf.plot(ax=ax, color='red', markersize=5)
+plt.title('Average Household Income by ZCTA5 with Vacant Lots')
+
+plt.show()
 ```
