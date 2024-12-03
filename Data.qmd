@@ -39,7 +39,7 @@ import json
 
 ```{python}
 # Define the output directory and file names
-directory = r"C:\Users\laine\OneDrive\Documents\GitHub\DAPII_final"
+directory = r"C:\Users\EM\Documents\GitHub\DAPII_final"
 ```
 ```{python}
 # Initialize the Census API with your API key
@@ -360,6 +360,9 @@ merged_census_and_geo.plot(ax=ax, column='average_price', edgecolor='black', leg
 vacancy_gdf.plot(ax=ax, color='red', markersize=5)
 plt.title('Average Housing Price by Census Tract with Vacant Lots')
 
+#export map
+plt.savefig(directory + '/tract_value.png')
+
 plt.show()
 ```
 
@@ -424,6 +427,9 @@ merged_census_and_geo.plot(ax=ax, column='average_income', edgecolor='black', le
 vacancy_gdf.plot(ax=ax, color='red', markersize=5)
 plt.title('Average Household Income by Census Tract with Vacant Lots')
 
+#export map
+plt.savefig(directory + '/tract_income.png')
+
 plt.show()
 ```
 
@@ -446,6 +452,9 @@ dissolved.plot(ax=ax, column='average_income', legend=True, edgecolor='black').s
 vacancy_gdf.plot(ax=ax, color='red', markersize=5)
 plt.title('Average Household Income by ZCTA5 with Vacant Lots')
 
+#export map
+plt.savefig(directory + '/zcta_income.png')
+
 plt.show()
 ```
 
@@ -459,7 +468,21 @@ dissolved.plot(ax=ax, column='average_price', legend=True, edgecolor='black').se
 
 #Plot the points
 vacancy_gdf.plot(ax=ax, color='red', markersize=5)
-plt.title('Average Household Income by ZCTA5 with Vacant Lots')
+plt.title('Average Housing Price by ZCTA5 with Vacant Lots')
+
+#export map
+plt.savefig(directory + '/zcta_value.png')
 
 plt.show()
+```
+
+### Shiny Maps
+
+```{python}
+# Instructions for tab  1:
+#1) install dependencies: folium; this is in the requirements.txt
+#2 shiny run --reload C:\Users\EM\Documents\GitHub\DAPII_final\vacancy_tabs\app.py
+
+# tab 2:
+# show 4 different maps by toggling area measure (zcta/tract) and centered wealth measure (housing price/median income)
 ```

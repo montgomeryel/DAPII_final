@@ -12,6 +12,9 @@ vacancy_data = pd.read_csv('C:/Users/EM/Documents/GitHub/DAPII_final/vacant.csv'
 vacancy_data['issued_date'] = pd.to_datetime(vacancy_data['issued_date'])
 vacancy_data['year'] = vacancy_data['issued_date'].dt.year
 
+# Filter out rows with missing coordinates 
+vacancy_data = vacancy_data.dropna(subset=['longitude', 'latitude'])
+
 # Create a geometry column from the coordinates
 vacancy_data['geometry'] = vacancy_data.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
 
@@ -24,9 +27,9 @@ app_ui = ui.page_fluid(
             ui.input_slider(
                 "year",
                 "Select Year",
-                min=vacancy_gdf['year'].min(),
-                max=vacancy_gdf['year'].max(),
-                value=vacancy_gdf['year'].min(),
+                min=2011,
+                max=2024,
+                value=2011,
                 step=1
             )
         ),
