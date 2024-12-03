@@ -479,6 +479,10 @@ plt.show()
 ### Shiny Maps
 
 ```{python}
+#convert vacancy dataframe using code from the app
+```
+
+```{python}
 #1) install required packages: folium; this is in the requirements.txt
 #2 shiny run --reload C:\Users\EM\Documents\GitHub\DAPII_final\vacancy_tabs\app.py
 
