@@ -1,4 +1,4 @@
-shiny
-seaborn
+geopandas
+shapely
 pandas
 folium

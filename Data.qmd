@@ -1,7 +1,7 @@
 ---
 title: "Data"
-author: 
-date: 
+author: Lauren Laine, Griffin Sharps, and Ella Montgomery
+date: 12/5/24
 format: 
   pdf:
     include-in-header: 
@@ -479,10 +479,11 @@ plt.show()
 ### Shiny Maps
 
 ```{python}
-# Instructions for tab  1:
-#1) install dependencies: folium; this is in the requirements.txt
+#1) install required packages: folium; this is in the requirements.txt
 #2 shiny run --reload C:\Users\EM\Documents\GitHub\DAPII_final\vacancy_tabs\app.py
 
-# tab 2:
+# tab 1:
 # show 4 different maps by toggling area measure (zcta/tract) and centered wealth measure (housing price/median income)
+# tab 2: 
+# interactive map that shows reported vacant lots for each year. Click on point to get street address.
 ```
