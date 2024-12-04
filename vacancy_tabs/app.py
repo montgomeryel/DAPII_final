@@ -9,20 +9,7 @@ from pathlib import Path
 here = Path(__file__).parent
 
 # Load the vacancy data from CSV file
-vacancy_data = pd.read_csv('C:/Users/EM/Documents/GitHub/DAPII_final/vacant.csv')
-
-# Convert issued_date to datetime and create a year column
-vacancy_data['issued_date'] = pd.to_datetime(vacancy_data['issued_date'])
-vacancy_data['year'] = vacancy_data['issued_date'].dt.year
-
-# Filter out rows with missing coordinates 
-vacancy_data = vacancy_data.dropna(subset=['longitude', 'latitude'])
-
-# Create a geometry column from the coordinates
-vacancy_data['geometry'] = vacancy_data.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
-
-# Transform vacancy location column into readable geographic data
-vacancy_gdf = gpd.GeoDataFrame(vacancy_data, geometry='geometry')
+vacancy_gdf = gpd.read_file("vacant_gdf.shp")
 
 # create the UI
 page1 = ui.navset_card_underline(

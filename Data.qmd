@@ -267,12 +267,17 @@ Here we will test our geo data
 import matplotlib.pyplot as plt
 from shapely.geometry import Point
 
+# Filter out rows with missing coordinates 
+vacancy_data = vacancy_data.dropna(subset=['longitude', 'latitude'])
 
 #create a geometry column from the coordinates
 vacancy_data['geometry'] = vacancy_data.apply(lambda row: Point(row['longitude'], row['latitude']), axis=1)
 
 #transform vacancy location column into readable geographic data
 vacancy_gdf = gpd.GeoDataFrame(vacancy_data, geometry='geometry')
+
+# saving the gdf for later use
+vacant_gdf.to_file("vacant_gdf.shp")
 
 #set coordinate ref system
 vacancy_gdf.set_crs(epsg=4326, inplace=True) 
