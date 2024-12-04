@@ -439,6 +439,10 @@ plt.show()
 ```
 
 ```{python}
+merged_census_and_geo['geometry']=merged_census_and_geo['geometry'].make_valid()
+```
+
+```{python}
 dissolved = merged_census_and_geo[['ZCTA5', 'geometry', 'average_price', 'average_income']].dissolve(by="ZCTA5", aggfunc="mean")
 
 dissolved = dissolved.reset_index()
@@ -449,6 +453,7 @@ dissolved = dissolved.reset_index()
 #create avg household income map by ZCTA5
 fig, ax = plt.subplots(figsize=(10, 10))
 
+merged_census_and_geo.plot(ax=ax, facecolor=white, edgecolor='gray')
 # Plot the city tracts
 dissolved.plot(ax=ax, column='average_income', legend=True, edgecolor='black').set_axis_off()
 
