@@ -8,15 +8,23 @@ from pathlib import Path
 
 here = Path(__file__).parent
 
-# Load the vacancy data from CSV file
+# Load the vacancy data from shp file
 vacancy_gdf = gpd.read_file("vacant_gdf.shp")
 
 # create the UI
 page1 = ui.navset_card_underline(
-    ui.nav_panel("Map Toggles",
-        ui.input_select("area_measure", "Area Measure:", ["zcta", "tract"]),
-        ui.input_select("wealth_measure", "Wealth Measure:", ["income", "value"]),
-        ui.output_image("map_image")
+ui.nav_panel(
+    "Map Toggles",
+    ui.layout_sidebar(
+        ui.sidebar(
+            ui.input_radio_buttons("area_measure", "Area Measure:", ["zcta", "tract"]),
+            ui.input_radio_buttons("wealth_measure", "Wealth Measure:", ["income", "value"])
+        ),
+        ui.output_image("map_image"),
+        fill=True,
+        border=True,
+        gap="10px")
+    
     ),
     title="Total Reported Vacant Lots 2011 - 2024"
 )
@@ -50,7 +58,7 @@ def server(input, output, session):
         area_measure = input.area_measure()
         wealth_measure = input.wealth_measure()
         image_path = here / f"{area_measure}_{wealth_measure}.png"
-        return {"src": image_path, "alt": f"Map showing {wealth_measure} for {area_measure}", "width": "80%"}
+        return {"src": image_path, "alt": f"Map showing {wealth_measure} for {area_measure}", "width": "50%"}
 
     def create_map(year):
         filtered_gdf = vacancy_gdf[vacancy_gdf['year'] == year]
