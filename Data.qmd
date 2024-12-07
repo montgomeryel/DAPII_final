@@ -94,24 +94,35 @@ else:
     crosswalk_raw = pd.read_csv(crosswalk_url, delimiter=',', dtype=str)
     crosswalk_raw.to_csv(crosswalk_file, index=False)
     print(f"Crosswalk file saved to {crosswalk_file}.")
-
+```
+```{python}
 # Load the crosswalk file
-crosswalk_raw = pd.read_csv(crosswalk_file)
+dtype_dict={'TRACT':str}
+crosswalk_raw = pd.read_csv(crosswalk_file, dtype=dtype_dict)
 crosswalk_raw["tract"] = crosswalk_raw["TRACT"].astype(str)
 crosswalk_merge = crosswalk_raw[["tract", "ZCTA5"]]
+```
 
+```{python}
+crosswalk_merge.dtypes
+```
+```{python}
 # Merge combined data with the crosswalk
 prices_income_vacancy = combined_data.astype({'tract': 'str'}).merge(
     crosswalk_merge, 
     how='left', 
     on='tract'
 )
-
+```
+```{python}
 # Save the final merged DataFrame to a new CSV
 output_file = os.path.join(directory, "prices_income_vacancy.csv")
 prices_income_vacancy.to_csv(output_file, index=False)
 ```
 
+```{python}
+hmm=prices_income_vacancy[prices_income_vacancy['ZCTA5'].isna()]
+```
 ```{python}
 # Column names
 metadata_file = os.path.join(directory, "col_names.json")
@@ -167,6 +178,10 @@ census_df.rename(columns=lambda col: custom_column_renamer(col, metadata_dict), 
 census_df.columns = census_df.columns.str.replace("!!", " ", regex=False)
 ```
 
+
+```{python}
+crosswalk_raw.columns
+```
 ```{python}
 # Chicago Community Areas
 csv_file = os.path.join(directory, "community_areas_raw.csv")
@@ -277,7 +292,7 @@ vacancy_data['geometry'] = vacancy_data.apply(lambda row: Point(row['longitude']
 vacancy_gdf = gpd.GeoDataFrame(vacancy_data, geometry='geometry')
 
 # saving the gdf for later use
-vacant_gdf.to_file("vacant_gdf.shp")
+vacancy_gdf.to_file("vacant_gdf.shp")
 
 #set coordinate ref system
 vacancy_gdf.set_crs(epsg=4326, inplace=True) 
@@ -442,6 +457,7 @@ plt.savefig(directory + '/tract_income.png')
 plt.show()
 ```
 
+### ZCTA
 ```{python}
 merged_census_and_geo['geometry']=merged_census_and_geo['geometry'].make_valid()
 ```
@@ -451,25 +467,55 @@ dissolved = merged_census_and_geo[['ZCTA5', 'geometry', 'average_price', 'averag
 
 dissolved = dissolved.reset_index()
 
+```
 
+```{python}
+merged_zctas=merged_census_and_geo['ZCTA5'].unique()
+dissolved_zctas=dissolved['ZCTA5'].unique()
+
+for x in merged_zctas:
+    if x not in dissolved_zctas:
+        print(f'{x} not in dissolved')
+
+```
+
+```{python}
+merged_census_and_geo.columns
+```
+```{python}
+merged_na_zctas = merged_census_and_geo[merged_census_and_geo['ZCTA5']==0]
+
+na_zcta_tracts=merged_na_zctas['tractce10'].unique()
+na_zcta_tracts[0:14]
+```
+
+```{python}
+census_na_zctas=census_df[census_df['ZCTA5'].isna()]
+```
+```{python}
+merged_na_zctas.plot()
 ```
 ```{python}
 #create avg household income map by ZCTA5
 fig, ax = plt.subplots(figsize=(10, 10))
 
-merged_census_and_geo.plot(ax=ax, facecolor=white, edgecolor='gray')
+merged_census_and_geo.plot(ax=ax, facecolor='white', edgecolor='gray')
+
 # Plot the city tracts
-dissolved.plot(ax=ax, column='average_income', legend=True, edgecolor='black').set_axis_off()
+dissolved.plot(ax=ax, column='average_income', legend=True, edgecolor='black',cmap='Greens').set_axis_off()
 
 
 #Plot the points
-vacancy_gdf.plot(ax=ax, color='red', markersize=5)
+vacancy_gdf.plot(ax=ax, color='red', markersize=5,marker='o', label='Vacant Lots')
 plt.title('Average Household Income by ZCTA5 with Vacant Lots')
-
+ax.legend(loc='lower left')
 #export map
 plt.savefig(directory + '/zcta_income.png')
 
 plt.show()
+
+
+
 ```
 
 ```{python}
@@ -477,13 +523,13 @@ plt.show()
 fig, ax = plt.subplots(figsize=(10, 10))
 
 # Plot the city tracts
-dissolved.plot(ax=ax, column='average_price', legend=True, edgecolor='black').set_axis_off()
+dissolved.plot(ax=ax, column='average_price', legend=True, edgecolor='black',cmap='Greens').set_axis_off()
 
 
 #Plot the points
-vacancy_gdf.plot(ax=ax, color='red', markersize=5)
+vacancy_gdf.plot(ax=ax, color='red', markersize=5,marker='o', label='Vacant Lots')
 plt.title('Average Housing Price by ZCTA5 with Vacant Lots')
-
+ax.legend(loc='lower left')
 #export map
 plt.savefig(directory + '/zcta_value.png')
 
