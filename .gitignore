@@ -1,4 +1,16 @@
 *.zip
 *.xml
 *.prj
+*.cpg
+*.dbf
+*.shp
+*.shx
+B25075_raw.csv
+col_names.json
+community_areas_raw.csv
+prices_income_vacancy.csv
+vacant.csv
+tract_value.png
+Writeupline_chart.png
+zcta_tract_cross_walk_2010_census.csv
 Boundaries - Census Tracts - 2010/geo_export_4fe3e3ac-41f8-4a60-bb1e-c48fe46939e3.cpg
