@@ -33,13 +33,15 @@ import requests
 from census import Census
 from us import states
 import json
+import geopandas as gpd
+
 ```
 
 ### Set Directory
 
 ```{python}
 # Define the output directory and file names
-directory = r"C:\Users\EM\Documents\GitHub\DAPII_final\Data"
+directory = r'C:\Users\laine\OneDrive\Documents\GitHub\DAPII_final'
 ```
 ```{python}
 # Initialize the Census API with your API key
@@ -230,11 +232,45 @@ vacancy_data = pd.read_csv(directory + r"\vacant.csv")
 
 
 ```{python}
-import geopandas as gpd
+from shapely.geometry import shape
+client = Socrata("data.cityofchicago.org", None )
+
+results=client.get('74p9-q2aq', format='geojson')
+results_df = pd.json_normalize(results)
+
+# install geojson if you do not already have it
+if 'the_geom.type' in results_df.columns and 'the_geom.coordinates' in results_df.columns:
+        # Create geometry column using shapely
+        results_df['geometry'] = results_df.apply(lambda row: shape({
+            'type': row['the_geom.type'],
+            'coordinates': row['the_geom.coordinates']
+        }), axis=1)
+
+# Optionally, you can normalize the features into a DataFrame
+# This will flatten the structure and allow you to work with the properties and geometry
+
+```
+
+```{python}
+geo_data=gpd.GeoDataFrame(results_df, geometry='geometry')
+
+# saving the gdf for later use
+geo_data.to_file("census_tract_geo_data.shp")
+
+#set coordinate ref system
+geo_data.set_crs(epsg=4326, inplace=True)
+
+```
+
+```{python}
+#download the data from https://data.cityofchicago.org/Facilities-Geographic-Boundaries/CensusTractsTIGER2010/74p9-q2aq/about_data
+#Use the export button in the top righthand corner to download as a shapefile
 
 geo_data=gpd.read_file(directory + r"\geo_export_babed850-df6f-42f1-a951-f174092d5ba8.shp")
 
+
 ```
+
 
 ```{python}
 geo_data.head()
