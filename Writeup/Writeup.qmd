@@ -29,7 +29,8 @@ import requests
 from census import Census
 from us import states
 import json
-directory = r"/Users/griffinsharps/Documents/Repos/DAPII_final/Writeup"
+import geopandas as gpd
+directory = r'C:\Users\laine\OneDrive\Documents\GitHub\DAPII_final\Writeup'
 ```
 
 ```{python}
@@ -111,6 +112,7 @@ prices_income_vacancy.to_csv(output_file, index=False)
 ```
 
 ```{python}
+# used for troubleshooting problem with ZCTA maps later
 hmm=prices_income_vacancy[prices_income_vacancy['ZCTA5'].isna()]
 ```
 
@@ -245,6 +247,10 @@ line_chart = alt.Chart(violations_per_year).mark_line().encode(
 # $pip install vl-convert-python
 line_chart.save(directory + 'line_chart.png')
 
+```
+
+```{python}
+line_chart
 ```
 
 ```{python}
