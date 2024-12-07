@@ -192,9 +192,30 @@ vacancy_data = pd.read_csv(directory + r"/vacant.csv")
 ```
 
 ```{python}
-import geopandas as gpd
+from shapely.geometry import shape
+client = Socrata("data.cityofchicago.org", None )
 
-geo_data=gpd.read_file(directory + r"/geo_export_babed850-df6f-42f1-a951-f174092d5ba8.shp")
+results=client.get('74p9-q2aq', format='geojson')
+results_df = pd.json_normalize(results)
+
+# install geojson if you do not already have it
+#use shape because the geometry is in 2 columns not 1
+if 'the_geom.type' in results_df.columns and 'the_geom.coordinates' in results_df.columns:
+        # Create geometry column using shapely
+        results_df['geometry'] = results_df.apply(lambda row: shape({
+            'type': row['the_geom.type'],
+            'coordinates': row['the_geom.coordinates']
+        }), axis=1)
+```
+```{python}
+geo_data=gpd.GeoDataFrame(results_df, geometry='geometry')
+
+# saving the gdf for later use
+geo_data.to_file("census_tract_geo_data.shp")
+
+#set coordinate ref system
+geo_data.set_crs(epsg=4326, inplace=True)
+
 ```
 
 ```{python}
