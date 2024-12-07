@@ -39,7 +39,7 @@ import json
 
 ```{python}
 # Define the output directory and file names
-directory = r"C:\Users\EM\Documents\GitHub\DAPII_final"
+directory = r"C:\Users\laine\OneDrive\Documents\GitHub\DAPII_final"
 ```
 ```{python}
 # Initialize the Census API with your API key
@@ -350,8 +350,10 @@ merged_census_and_geo['average_price'] = merged_census_and_geo.apply(ave_price, 
 
  ```
  
+
 Create plot
 ```{python}
+merged_census_and_geo['average_price']=merged_census_and_geo['average_price'].fillna(0)
 # excluding prices over $999,999
 import matplotlib.colors as mcolors
 norm=mcolors.Normalize(vmin=merged_census_and_geo['average_price'].min(), vmax=999999)
@@ -359,10 +361,11 @@ norm=mcolors.Normalize(vmin=merged_census_and_geo['average_price'].min(), vmax=9
 fig, ax = plt.subplots(figsize=(10, 10))
 
 # Plot the city tracts
-merged_census_and_geo.plot(ax=ax, column='average_price', edgecolor='black', legend=True, norm=norm).set_axis_off()
+merged_census_and_geo.plot(ax=ax, column='average_price', edgecolor='black', legend=True, cmap='Greens', norm=norm).set_axis_off()
 
 #Plot the points
-vacancy_gdf.plot(ax=ax, color='red', markersize=5)
+vacancy_gdf.plot(ax=ax, color='red', markersize=5, marker='o', label='Vacant Lots')
+ax.legend(loc='lower left')
 plt.title('Average Housing Price by Census Tract with Vacant Lots')
 
 #export map
@@ -426,11 +429,12 @@ norm=mcolors.Normalize(vmin=merged_census_and_geo['average_price'].min(), vmax=1
 fig, ax = plt.subplots(figsize=(10, 10))
 
 # Plot the city tracts
-merged_census_and_geo.plot(ax=ax, column='average_income', edgecolor='black', legend=True, norm=norm).set_axis_off()
+merged_census_and_geo.plot(ax=ax, column='average_income', edgecolor='black', legend=True, norm=norm, cmap='Greens').set_axis_off()
 
 #Plot the points
-vacancy_gdf.plot(ax=ax, color='red', markersize=5)
+vacancy_gdf.plot(ax=ax, color='red', markersize=5, marker='o', label='Vacant Lots')
 plt.title('Average Household Income by Census Tract with Vacant Lots')
+ax.legend(loc='lower left')
 
 #export map
 plt.savefig(directory + '/tract_income.png')
