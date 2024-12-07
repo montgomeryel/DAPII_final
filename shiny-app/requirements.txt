@@ -3,3 +3,5 @@ shapely
 pandas
 folium
 pathlib
+sodapy
+vl-convert-python

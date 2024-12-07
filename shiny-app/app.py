@@ -17,6 +17,7 @@ ui.nav_panel(
     "Map Toggles",
     ui.layout_sidebar(
         ui.sidebar(
+            ui.input_radio_buttons("area_measure", "Area Measure:", ["zcta", "tract"]),
             ui.input_radio_buttons("wealth_measure", "Wealth Measure:", ["income", "value"])
         ),
         ui.output_image("map_image"),
@@ -54,9 +55,10 @@ def server(input, output, session):
     @output
     @render.image
     def map_image():
+        area_measure = input.area_measure()
         wealth_measure = input.wealth_measure()
-        image_path = here / f"tract_{wealth_measure}.png"
-        return {"src": image_path, "alt": f"Map showing {wealth_measure} for tract", "width": "50%"}
+        image_path = here / f"{area_measure}_{wealth_measure}.png"
+        return {"src": image_path, "alt": f"Map showing {wealth_measure} for {area_measure}", "width": "50%"}
 
     def create_map(year):
         filtered_gdf = vacancy_gdf[vacancy_gdf['year'] == year]
