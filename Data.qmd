@@ -39,7 +39,7 @@ import json
 
 ```{python}
 # Define the output directory and file names
-directory = r"C:\Users\laine\OneDrive\Documents\GitHub\DAPII_final"
+directory = r"C:\Users\EM\Documents\GitHub\DAPII_final\Data"
 ```
 ```{python}
 # Initialize the Census API with your API key
@@ -269,10 +269,10 @@ line_chart = alt.Chart(violations_per_year).mark_line().encode(
     x=alt.X('year:O', scale=alt.Scale(domain=list(range(2011, violations_per_year['year'].max() + 1)))),
     y='count:Q'
 ).properties(
-    title='Count of Violations per Year'
+    title='Count of Vacancy Reports per Year'
 )
-
-line_chart
+# $pip install vl-convert-python
+line_chart.save(directory + 'line_chart.png')
 
 ```
 
@@ -539,13 +539,6 @@ plt.show()
 ### Shiny Maps
 
 ```{python}
-#convert vacancy dataframe using code from the app
-```
-
-```{python}
-#1) install required packages: folium; this is in the requirements.txt
-#2 shiny run --reload C:\Users\EM\Documents\GitHub\DAPII_final\vacancy_tabs\app.py
-
 # tab 1:
 # show 4 different maps by toggling area measure (zcta/tract) and centered wealth measure (housing price/median income)
 # tab 2: 
