@@ -322,23 +322,62 @@ plt.savefig(directory + '/tract_value.png')
 ```
 
 ```{python}
-merged_census_and_geo['average_price']=merged_census_and_geo['average_price'].fillna(0)
-# excluding prices over $999,999
+def ave_income(row):
+    # Multiplying values from columns based on the row
+    calc_1 = row[merged_census_and_geo.columns[28]] * ((0+9999)/2)
+    calc_2 = row[merged_census_and_geo.columns[29]] * ((10000+14999)/2)
+    calc_3 = row[merged_census_and_geo.columns[30]] * ((15000 +19999)/2)
+    calc_4 = row[merged_census_and_geo.columns[31]] * ((20000+24999)/2)
+    calc_5 = row[merged_census_and_geo.columns[32]] * ((25000+29999)/2)
+    calc_6 = row[merged_census_and_geo.columns[33]] * ((30000+34999)/2)
+    calc_7 = row[merged_census_and_geo.columns[34]] * ((35000+39999)/2)
+    calc_8 = row[merged_census_and_geo.columns[35]] * ((40000+44999)/2)
+    calc_9 = row[merged_census_and_geo.columns[36]] * ((45000+49999)/2)
+    calc_10 = row[merged_census_and_geo.columns[37]] * ((50000+59999)/2)
+    calc_11 = row[merged_census_and_geo.columns[38]] * ((60000+74999)/2)
+    calc_12 = row[merged_census_and_geo.columns[39]] * ((75000+99999)/2)
+    calc_13 = row[merged_census_and_geo.columns[40]] * ((100000+124999)/2)
+    calc_14 = row[merged_census_and_geo.columns[41]] * ((125000+14999)/2)
+    calc_15 = row[merged_census_and_geo.columns[42]] * ((150000+199999)/2)
+    calc_16 = row[merged_census_and_geo.columns[43]] * ((200000+1000000)/2)
+    
+    
+
+    numerator = (calc_1 + calc_2 + calc_3 + calc_4 + calc_5 + calc_6 +
+                 calc_7 + calc_8 + calc_9 + calc_10 + calc_11 + calc_12 +
+                 calc_13 + calc_14 + calc_15 + calc_16)
+
+    if row['Household Income Estimate Total:']==0:
+      average=0
+    else:
+      denominator = row['Household Income Estimate Total:']
+      average = numerator / denominator
+    return average
+
+
+# Apply the function to each row of the DataFrame
+merged_census_and_geo['average_income'] = merged_census_and_geo.apply(ave_income, axis=1)
+```
+```{python}
+#creating average household income by census tract map
+# excluding incomes over 199,999
 import matplotlib.colors as mcolors
-norm=mcolors.Normalize(vmin=merged_census_and_geo['average_price'].min(), vmax=999999)
+norm=mcolors.Normalize(vmin=merged_census_and_geo['average_price'].min(), vmax=199999)
 
 fig, ax = plt.subplots(figsize=(10, 10))
 
 # Plot the city tracts
-merged_census_and_geo.plot(ax=ax, column='average_price', edgecolor='black', legend=True, cmap='Greens', norm=norm).set_axis_off()
+merged_census_and_geo.plot(ax=ax, column='average_income', edgecolor='black', legend=True, norm=norm, cmap='Greens').set_axis_off()
 
 #Plot the points
 vacancy_gdf.plot(ax=ax, color='red', markersize=5, marker='o', label='Vacant Lots')
+plt.title('Average Household Income by Census Tract with Vacant Lots')
 ax.legend(loc='lower left')
-plt.title('Average Housing Price by Census Tract with Vacant Lots')
 
 #export map
-plt.savefig(directory + '/tract_value.png')
+plt.savefig(directory + '/tract_income.png')
+
+plt.show()
 ```
 
 ```{python}
@@ -359,8 +398,10 @@ for x in merged_zctas:
     if x not in dissolved_zctas:
         print(f'{x} not in dissolved')
 ```
+ 
 
 ```{python}
+#troubleshooting missing ZCTAs from ZCTA maps
 merged_na_zctas = merged_census_and_geo[merged_census_and_geo['ZCTA5']==0]
 
 na_zcta_tracts=merged_na_zctas['tractce10'].unique()
